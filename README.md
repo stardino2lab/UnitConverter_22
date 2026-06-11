@@ -82,10 +82,16 @@ deactivate
    - TC를 추가해보면서 개선에 미친 영향, TC 작성 팁
    - 클린코드와 리팩토링에서 느낀 장점과 어려운점
 
-## D2 실습 가이드 · 문서화
+## D2 실습 · 문서 구조
 
-- **HTML 가이드:** [docs/D2-진행가이드.html](docs/D2-진행가이드.html) — Mom Test → PRD → RED → GREEN → REFACTOR 순서
-- **단계 종료:** Cursor Agent에서 `/export-report-transcript` 실행
-- **산출물:** `Report/NN.REPORT.md` + `Prompting/NN.Export-Transcript.md` (번호 NN 일치)
+| 경로 | Git | 용도 |
+|------|-----|------|
+| [docs/PRD.md](docs/PRD.md) | **추적** | C2C SSOT (요구사항·FR/NFR) |
+| [guide/D2-진행가이드.html](guide/D2-진행가이드.html) | **제외** (`guide/`) | 개인 실습 HTML 가이드 |
+| `Report/` · `Prompting/` | 추적 | 단계별 Export (`/export-report-transcript`) |
+
+- **단계 종료:** Cursor Agent에서 `/export-report-transcript`
 - **Skill:** `~/.cursor/skills/export-report-transcript/`
 - **Command:** `.cursor/commands/export-report-transcript.md`
+
+`guide/` 폴더는 gitignore — HTML 가이드는 로컬에서만 사용. PRD·Report·Prompting은 저장소에 커밋.
