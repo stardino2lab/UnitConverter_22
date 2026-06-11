@@ -42,17 +42,34 @@ def test_u_in_03_negative_value_rejected(capsys):
     assert "negative" in captured.err.lower()
 
 
-def test_u_out_01_meter_input_prints_three_or_more_lines():
+def test_u_out_01_meter_input_prints_three_or_more_lines(capsys):
     """U-OUT-01: 'meter:2.5' → README-style output (3+ lines)."""
     # Given: "meter:2.5"
     # When: CLI runs successfully
     # Then: stdout has 3+ lines (meter, feet, yard in README format)
-    pytest.fail("RED: U-OUT-01")
+    from unit_converter.app.cli import run
+
+    exit_code = run("meter:2.5")
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    lines = [line for line in captured.out.strip().splitlines() if line.strip()]
+    assert len(lines) >= 3
+    output = captured.out.lower()
+    assert "meter" in output
+    assert "feet" in output
+    assert "yard" in output
+    assert "2.5 meter =" in captured.out
 
 
-def test_pfr_03_unregistered_unit_cubit_error():
+def test_pfr_03_unregistered_unit_cubit_error(capsys):
     """PFR-03: 'cubit:1' (unregistered) → clear error."""
     # Given: "cubit:1"
     # When: CLI processes input
     # Then: clear error message and non-zero exit code
-    pytest.fail("RED: PFR-03")
+    from unit_converter.app.cli import run
+
+    exit_code = run("cubit:1")
+    captured = capsys.readouterr()
+    assert exit_code != 0
+    assert "unknown unit" in captured.err.lower()
+    assert "cubit" in captured.err.lower()
