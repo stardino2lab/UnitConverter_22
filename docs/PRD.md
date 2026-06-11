@@ -2,7 +2,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | 0.1 (초안) |
+| 버전 | 0.2 (Design 반영) |
 | SSOT | 본 문서 ↔ README.md ↔ Test ID |
 | 우선순위 | P0 = 이번 스프린트 필수 · P1 = Out of Scope (추가 요구) |
 
@@ -113,6 +113,89 @@ from unit_converter.app.cli import main  # ← 미구현
 
 - meter, feet, yard
 
+### 4.5 To-Be Architecture (D2 단계 1 · Design)
+
+**상태:** 설계 확정 · 코드 미구현 (`Report/02.REPORT.md`)
+
+#### 4.5.1 패키지 구조
+
+```
+UnitConverter_22/
+├── UnitConverter.py              # 하위 호환 엔트리포인트 (cli 위임)
+├── unit_converter/
+│   ├── domain/
+│   │   ├── length_unit.py        # 단위 Protocol·구현체 (meter/feet/yard)
+│   │   ├── unit_registry.py      # 등록·조회 (OCP 확장점)
+│   │   └── converter.py          # meter 허브 기반 순수 변환
+│   ├── infrastructure/           # P1 — P0 핵심 범위 밖
+│   │   └── config_loader.py      # JSON/YAML 비율 로드
+│   └── app/
+│       ├── input_parser.py       # "unit:value" 파싱·검증
+│       ├── output_formatter.py   # README 1줄 형식 출력 (P1: json/csv/table)
+│       └── cli.py                # I/O 오케스트레이션·exit code
+└── tests/
+    ├── test_converter.py         # Track B (Domain)
+    └── test_cli.py               # Track A (Boundary)
+```
+
+**의존 방향:** `domain` ← `app` ← (P1) `infrastructure`. Domain은 I/O·CLI에 비의존 (NFR-03).
+
+#### 4.5.2 모듈 단일 책임 (SRP)
+
+| 모듈 | 단일 책임 | 담당 FR/NFR |
+|------|-----------|-------------|
+| `length_unit.py` | 단위 계약 (`name`, `to_meter`) | NFR-01 |
+| `unit_registry.py` | 이름 기준 등록·조회 | FR-03, NFR-01 |
+| `converter.py` | meter 허브 → 전 단위 숫자 변환 | FR-02, NFR-01 |
+| `input_parser.py` | `단위:값` 파싱·형식·음수 검증 | FR-01, FR-04, FR-05 |
+| `output_formatter.py` | README 형식 문자열 출력 | FR-02 |
+| `cli.py` | parser → registry → converter → formatter 조립 | FR-02, FR-03 |
+| `config_loader.py` *(P1)* | 외부 설정에서 비율 로드 | EXT-01 |
+
+#### 4.5.3 OCP 확장 규칙
+
+| 변경 | 수정 대상 | 수정하지 않는 대상 |
+|------|-----------|-------------------|
+| `inch` 등 단위 추가 (NFR-01) | `length_unit.py` 구현체 + `registry.register()` | `converter.py` 핵심, `cli.py` if/elif |
+| 동적 등록 (EXT-02) | `registry.register()` 호출부 | `converter.convert_all()` 내부 |
+| 출력 포맷 (EXT-03) | `output_formatter.py` | `converter.py` |
+
+#### 4.5.4 데이터 흐름 (P0 Happy Path)
+
+```
+stdin/argv "meter:2.5"
+  → input_parser.parse()           → ("meter", 2.5)          [FR-01]
+  → unit_registry.get("meter")                               [FR-03 경계]
+  → converter.convert_all(...)     → {feet, yard, meter, …}  [FR-02]
+  → output_formatter.format(...)   → stdout                  [FR-02]
+```
+
+오류 경로: parser 실패(FR-04/05) 또는 registry 미등록(FR-03) → `cli`가 stderr·exit code 통일.
+
+#### 4.5.5 FR/NFR → 파일 매핑
+
+| ID | 주 책임 모듈 | 보조 모듈 | Test ID |
+|----|-------------|-----------|---------|
+| FR-01 | `input_parser.py` | `cli.py` | U-OUT-01 |
+| FR-02 | `converter.py` | `output_formatter.py`, `unit_registry.py`, `cli.py` | D-CNV-02, D-CNV-03, U-OUT-01 |
+| FR-03 | `unit_registry.py` | `cli.py` | U-ERR-01 |
+| FR-04 | `input_parser.py` | `cli.py` | U-IN-03 |
+| FR-05 | `input_parser.py` | `cli.py` | U-IN-01, U-IN-02, U-IN-04, U-IN-05 |
+| NFR-01 | `length_unit.py`, `unit_registry.py` | — | D-REG-01 *(P1)* |
+| NFR-02 | 전체 패키지 레이아웃 | — | 구조 리뷰 |
+| NFR-03 | `tests/test_converter.py`, `tests/test_cli.py` | — | Dual-Track TC |
+| EXT-01 | `config_loader.py` | — | D-CFG-01 |
+| EXT-02 | `unit_registry.py` | `cli.py` | D-REG-01 |
+| EXT-03 | `output_formatter.py` | `cli.py` | *(P1 별도)* |
+
+#### 4.5.6 As-Is → To-Be 대응
+
+| As-Is | 원인 | To-Be 모듈 | Test ID |
+|-------|------|-----------|---------|
+| A-1 `meter:2.5` → feet 1줄만 | if/elif·비대칭 출력 | `converter` + `output_formatter` | U-OUT-01 |
+| A-2 `feet:10` → meter 1줄만 | 동일 | 동일 | D-CNV-03 |
+| A-3 `meter:2.5:extra` → ValueError | `split(':',1)` 경계 미처리 | `input_parser` | U-IN-04 |
+
 ---
 
 ## 5. Out of Scope (P1 — README 추가 요구)
@@ -138,22 +221,44 @@ from unit_converter.app.cli import main  # ← 미구현
 
 ---
 
-## 7. C2C 추적 (다음 단계 placeholder)
+## 7. C2C 추적 (PRD → Test ID → 모듈)
 
-| PRD ID | Test ID (예정) | 비고 |
-|--------|----------------|------|
-| FR-01 | U-IN-* / Parser | |
-| FR-02 | D-CNV-02, U-OUT-01 | Golden Master |
-| FR-03 | U-OUT-01, PFR-03 | |
-| FR-04 | U-IN-03 | |
-| FR-05 | U-IN-01,02 + `meter:2.5:extra` | |
-| NFR-01 | D-REG-01 | P1과 구분 |
-| NFR-02 | 구조 리뷰 | REFACTOR |
+### 7.1 P0 Test Case (RED 대상)
+
+| PRD ID | Test ID | Track | Given | Then | 주 모듈 |
+|--------|---------|-------|-------|------|---------|
+| FR-02 | D-CNV-01 | B | 1 feet | ≈ 0.3048 m | `length_unit`, `converter` |
+| FR-02 | D-CNV-02 | B | 2.5 meter | feet ≈ 8.20210 | `converter` |
+| FR-02 | D-CNV-03 | B | feet 입력 | yard·meter 상호 일관 | `converter` |
+| FR-05 | U-IN-01 | A | `""` | 형식 오류·비zero exit | `input_parser`, `cli` |
+| FR-05 | U-IN-02 | A | `meter` | 형식 오류 | `input_parser` |
+| FR-04 | U-IN-03 | A | `meter:-1` | 거부·오류 메시지 | `input_parser` |
+| FR-05 | U-IN-04 | A | `meter:2.5:extra` | 형식 오류·크래시 없음 | `input_parser` |
+| FR-05 | U-IN-05 | A | `abc` | 형식 오류 | `input_parser` |
+| FR-03 | U-ERR-01 | A | `cubit:1` | 명확한 오류·비zero exit | `unit_registry`, `cli` |
+| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 3줄+ | `cli` (E2E) |
+
+**P0 RED 필수:** 10건 (Track B 3 + Track A 7).
+
+### 7.2 P1 Test Case (Out of Scope)
+
+| PRD ID | Test ID | Given | Then | 주 모듈 |
+|--------|---------|-------|------|---------|
+| NFR-01, EXT-02 | D-REG-01 | cubit 0.4572 m 등록 | 변환 성공 | `unit_registry` |
+| EXT-01 | D-CFG-01 | 깨진 units.json | ConfigError | `config_loader` |
+
+### 7.3 구현 순서 (ARRR)
+
+1. **RED** — §7.1 TC만 작성 (`pytest.fail`), 구현 금지
+2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과
+3. **REFACTOR** — parser/formatter 추출, §7.1 전체 GREEN 유지
+4. **P1** — §7.2 + `new_features` 브랜치
 
 ---
 
 ## 8. 참조
 
 - [README.md](../README.md) — 기본·품질·추가 요구
-- [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 요약
+- [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 요약 (단계 0)
+- [Report/02.REPORT.md](../Report/02.REPORT.md) — OCP/SRP 아키텍처 설계 (단계 1)
 - [guide/D2-진행가이드.html](../guide/D2-진행가이드.html) — D2 실습 가이드 (로컬, gitignored)
