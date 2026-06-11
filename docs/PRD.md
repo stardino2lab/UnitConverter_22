@@ -304,7 +304,6 @@ stdin/argv "meter:2.5"
 - [Report/03.REPORT.md](../Report/03.REPORT.md) — Dual-Track RED·pytest FAIL (단계 2)
 - [Report/04.REPORT.md](../Report/04.REPORT.md) — GREEN 최소 구현 (단계 3)
 - [Report/05.REPORT.md](../Report/05.REPORT.md) — Golden Master + REFACTOR (단계 4)
-- [guide/D2-진행가이드.html](../guide/D2-진행가이드.html) — D2 실습 가이드 (로컬, gitignored)
 - `tests/_approval.py`, `tests/golden/` — Golden Master harness·approve 파일
 - `tests/test_converter.py` — Track B (D-CNV-01~03)
 - `tests/test_cli.py` — Track A (U-IN-01~03, U-OUT-01 Golden, PFR-03)
