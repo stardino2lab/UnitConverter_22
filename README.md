@@ -98,10 +98,13 @@ pip install pytest
 # 실행 (stdin 또는 argv)
 python UnitConverter.py
 python UnitConverter.py meter:2.5
-# python -m unit_converter.app.cli meter:2.5
+python -m unit_converter.cli meter:2.5
 
 # 테스트
 python -m pytest tests/ -v
+
+# Golden 기준 갱신 (출력 계약 변경 시에만)
+# UPDATE_GOLDEN=1 python -m pytest tests/test_cli.py::test_u_out_01_meter_input_prints_three_or_more_lines -v
 ```
 
 **입·출력 예시 (`meter:2.5`):**
@@ -114,7 +117,7 @@ meter:2.5
 2.5 meter = 2.734 yard
 ```
 
-**pytest (GREEN — 8건):**
+**pytest (REFACTOR — 8건):**
 
 ```
 8 passed
@@ -126,23 +129,33 @@ meter:2.5
 
 ```
 UnitConverter_22/
-├── UnitConverter.py              # 진입점 → unit_converter.app.cli 위임
+├── UnitConverter.py              # 하위 호환 진입점 → unit_converter.cli 위임
 ├── unit_converter/
+│   ├── cli.py                    # I/O 오케스트레이션 (python -m unit_converter.cli)
+│   ├── input_parser.py           # unit:value 파싱·검증
+│   ├── unit_registry.py          # 등록·조회 (OCP)
 │   ├── domain/
 │   │   ├── length_unit.py        # 단위 계약·meter/feet/yard 구현
-│   │   ├── unit_registry.py      # 등록·조회 (OCP)
 │   │   └── converter.py          # meter 허브 변환
 │   └── app/
-│       ├── input_parser.py       # unit:value 파싱·검증
-│       ├── output_formatter.py   # README 1줄 형식 출력
-│       └── cli.py                # I/O 오케스트레이션
+│       └── output_formatter.py   # README 1줄 형식 출력
 ├── tests/
+│   ├── _approval.py              # Golden Master harness
+│   ├── golden/                   # Approval 기준 파일 (U-OUT-01)
 │   ├── test_converter.py         # Track B — Domain (D-CNV-*)
 │   └── test_cli.py               # Track A — Boundary (U-IN-*, U-OUT-01, PFR-03)
 ├── docs/PRD.md
 ├── Report/ · Prompting/
 └── guide/                        # 로컬 실습 HTML (gitignore)
 ```
+
+**확정 진입점:** `UnitConverter.py`는 `unit_converter.cli.main`에 위임하며, 모듈 실행은 `python -m unit_converter.cli`를 사용합니다.
+
+**OCP/SRP 4모듈:** `input_parser`(파싱) · `unit_registry`(등록) · `converter`(변환) · `output_formatter`(출력) — 각각 단일 책임, 신규 단위는 Registry 등록만으로 확장.
+
+### Golden Master (`tests/golden/`)
+
+U-OUT-01 CLI stdout을 `tests/golden/*.approved.txt`에 고정해 출력 계약을 보호합니다. `tests/_approval.py`의 `assert_matches_golden`이 실제 stdout과 golden 파일을 바이트 단위로 비교하며, REFACTOR·포맷 변경 시 diff 0을 유지합니다. 기준 갱신은 `UPDATE_GOLDEN=1`로만 수행합니다(수동 편집으로 통과 우회 금지).
 
 ### Dual-Track (pytest)
 
@@ -151,21 +164,37 @@ UnitConverter_22/
 | **B — Domain** | `tests/test_converter.py` | D-CNV-01~03 (변환 비율·정밀도·meter 허브) | 없음 |
 | **A — Boundary** | `tests/test_cli.py` | U-IN-01~03, U-OUT-01, PFR-03 (입력 검증·CLI 출력·미등록 단위) | Domain 허용 |
 
-Test ID·Given/Then 상세는 [docs/PRD.md](docs/PRD.md) 및 Report/03.
+Test ID·Given/Then 상세는 [docs/PRD.md](docs/PRD.md) 및 [Report/05.REPORT.md](Report/05.REPORT.md).
 
 ---
 
 ## REFACTOR To-Do
 
-> **갱신 시점:** 단계 4 REFACTOR 완료 후 Agent 프롬pt **4-B**로 잔여 스멜·P1을 반영합니다.
+> **갱신 시점:** 단계 4 REFACTOR 완료 (Agent 프롬pt **4-B**). Change Budget: **계약·Golden 불변**.
 
-| 항목 | 우선순위 | 상태 |
-|------|----------|------|
-| Golden Master (`tests/golden/`) — U-OUT-01 출력 계약 고정 | P0 | REFACTOR 예정 |
-| OCP/SRP 4모듈 분리 (Parser · Registry · Converter · Formatter) | P0 | GREEN 완료 |
-| 설정 외부화 (`units.json`) | P1 | 미착수 |
-| 동적 단위 등록 (`1 cubit = 0.4572 meter`) | P1 | 미착수 |
-| 출력 포맷 (`--format json\|csv\|table`) | P1 | 미착수 |
+### P0 완료
+
+| 항목 | 상태 |
+|------|------|
+| Golden Master (`tests/golden/`) — U-OUT-01 출력 계약 고정 | **완료** |
+| OCP/SRP 4모듈 분리 (Parser · Registry · Converter · Formatter) | **완료** |
+| `input_parser`·`unit_registry` app/domain 분리 · `unit_converter.cli` 진입점 | **완료** |
+
+### 잔여 스멜
+
+| 우선순위 | 스멜 | 위치 | 근거 | 후보 |
+|----------|------|------|------|------|
+| — | *(P0 없음)* | — | Safe Refactor 완료, pytest 8/8·Golden diff 0 | — |
+| P1 | Hardcoded unit list | `unit_registry.py:default_registry` | P0 단위가 코드에 고정 | `units.json` 외부화 |
+| P1 | Concrete unit classes | `domain/length_unit.py` | 비율 상수가 클래스에 내장 | inch 등 신규 단위·동적 등록 |
+
+### P1 후보 (`new_features` 브랜치)
+
+| 항목 | 설명 | 상태 |
+|------|------|------|
+| **inch** | `1 meter = 39.3701 inch` 등 길이 단위 확장 | 미착수 |
+| **units.json** | 변환 비율·단위 목록 설정 외부화 | 미착수 |
+| **--format** | `json` / `csv` / `table` 출력 포맷 선택 | 미착수 |
 
 ---
 
