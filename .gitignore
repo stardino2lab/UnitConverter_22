@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+
+# 로컬 실습 가이드 (개인용 HTML — SSOT는 docs/PRD.md)
+guide/
+
+# PPTX 추출 임시 파일
+_d*.txt

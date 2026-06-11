@@ -81,3 +81,131 @@ deactivate
    - AI를 어떻게 활용했나? 도움이 된 순간과 한계는?
    - TC를 추가해보면서 개선에 미친 영향, TC 작성 팁
    - 클린코드와 리팩토링에서 느낀 장점과 어려운점
+
+> **요구사항 SSOT:** 상세 FR/NFR·Mom Test는 [docs/PRD.md](docs/PRD.md) — README는 실행·구조 요약만 유지.
+
+---
+
+## 빠른 시작
+
+> **갱신 시점:** 단계 3 GREEN 완료 후 Agent 프롬pt **3-B**로 실제 명령·출력과 맞게 채웁니다.
+
+```bash
+# 가상환경 (최초 1회)
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS/Linux
+pip install pytest
+
+# 실행 (GREEN 후 확정 — 아래는 목표)
+python UnitConverter.py
+# python -m unit_converter.app.cli
+
+# 테스트 (GREEN 후)
+python -m pytest tests/ -v
+```
+
+**입·출력 예시 (P0 목표):**
+
+```
+meter:2.5
+→
+2.5 meter = 8.2021 feet
+2.5 meter = 2.7340 yard
+…
+```
+
+---
+
+## 프로젝트 구조
+
+> **1차 갱신:** GREEN (3-B) · **2차 갱신:** REFACTOR (4-B)
+
+```
+UnitConverter_22/
+├── UnitConverter.py              # 진입점 → unit_converter.app.cli 위임
+├── unit_converter/
+│   ├── domain/                   # length_unit, unit_registry, converter
+│   └── app/                      # input_parser, output_formatter, cli
+├── tests/
+│   ├── test_converter.py         # Track B — Domain (D-CNV-*)
+│   ├── test_cli.py               # Track A — Boundary (U-IN-*, U-OUT-*)
+│   └── golden/                   # Golden Master (REFACTOR 후)
+├── docs/PRD.md
+├── Report/ · Prompting/
+└── guide/                        # 로컬 실습 HTML (gitignore)
+```
+
+### Dual-Track (pytest)
+
+| Track | 파일 | 범위 | Mock |
+|-------|------|------|------|
+| **B — Domain** | `tests/test_converter.py` | 변환 비율·정밀도 (D-CNV-01~03) | 없음 |
+| **A — Boundary** | `tests/test_cli.py` | 입력 형식·CLI 출력 (U-IN-*, U-OUT-01) | Domain 허용 |
+
+Test ID·Given/Then 상세는 [docs/PRD.md](docs/PRD.md) 및 Report/03.
+
+---
+
+## REFACTOR To-Do
+
+> **갱신 시점:** 단계 4 REFACTOR 완료 후 Agent 프롬pt **4-B**로 잔여 스멜·P1을 반영합니다.
+
+| 항목 | 우선순위 | 상태 |
+|------|----------|------|
+| Golden Master (`tests/golden/`) — U-OUT-01 출력 계약 고정 | P0 | REFACTOR 예정 |
+| OCP/SRP 4모듈 분리 (Parser · Registry · Converter · Formatter) | P0 | GREEN/REFACTOR |
+| 설정 외부화 (`units.json`) | P1 | 미착수 |
+| 동적 단위 등록 (`1 cubit = 0.4572 meter`) | P1 | 미착수 |
+| 출력 포맷 (`--format json\|csv\|table`) | P1 | 미착수 |
+
+---
+
+## Cursor Commands
+
+| Command | 용도 | 모드 |
+|---------|------|------|
+| `/export-report-transcript` | Report/NN + Prompting/NN 쌍 저장 | Agent |
+
+- **Skill:** `~/.cursor/skills/export-report-transcript/`
+- **Project:** `.cursor/commands/export-report-transcript.md`
+
+---
+
+## D2 실습 · 문서 구조 (C2C)
+
+| 경로 | Git | 용도 |
+|------|-----|------|
+| [docs/PRD.md](docs/PRD.md) | **추적** | C2C SSOT (요구사항·FR/NFR) |
+| [guide/D2-진행가이드.html](guide/D2-진행가이드.html) | **제외** (`guide/`) | 개인 실습 HTML 가이드 |
+| `Report/` · `Prompting/` | 추적 | 단계별 Export (`/export-report-transcript`) |
+
+### C2C 문서 역할
+
+| 문서 | 역할 |
+|------|------|
+| `docs/PRD.md` | 요구사항 SSOT — Mom Test, FR/NFR, Test ID |
+| `Report/` · `Prompting/` | ARRR 단계 기록 (매 Export) |
+| `README.md` | **프로젝트 입구** — 실행·구조·Command (구조/API 바뀔 때만) |
+
+### README 갱신 타이밍
+
+| D2 단계 | README |
+|---------|--------|
+| 0 Mom+PRD · 1 Design · 2 RED | **보류** — PRD·Report에 기록 |
+| **3 GREEN** | **1차** — 빠른 시작·pytest·구조·Dual-Track |
+| **4 REFACTOR** | **2차** — Golden Master·REFACTOR To-Do·진입점 |
+| **5 추적표** | **3차** — P0/P1 요약·Report 문서 표 |
+| 6 KPT | 선택 |
+
+- **단계 종료:** Cursor Agent에서 `/export-report-transcript`
+- **상세:** `guide/D2-진행가이드.html` §README
+
+### 실무 규칙
+
+1. **요구 바뀜** → `docs/PRD.md`
+2. **세션 끝** → `/export-report-transcript`
+3. **실행/구조/API 바뀜** → `README.md`
+4. README에 Report·PRD 전문 복사 금지
+
+`guide/` 폴더는 gitignore — HTML 가이드는 로컬에서만 사용. PRD·Report·Prompting은 저장소에 커밋.
