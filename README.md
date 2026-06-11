@@ -81,3 +81,11 @@ deactivate
    - AI를 어떻게 활용했나? 도움이 된 순간과 한계는?
    - TC를 추가해보면서 개선에 미친 영향, TC 작성 팁
    - 클린코드와 리팩토링에서 느낀 장점과 어려운점
+
+## D2 실습 가이드 · 문서화
+
+- **HTML 가이드:** [docs/D2-진행가이드.html](docs/D2-진행가이드.html) — Mom Test → PRD → RED → GREEN → REFACTOR 순서
+- **단계 종료:** Cursor Agent에서 `/export-report-transcript` 실행
+- **산출물:** `Report/NN.REPORT.md` + `Prompting/NN.Export-Transcript.md` (번호 NN 일치)
+- **Skill:** `~/.cursor/skills/export-report-transcript/`
+- **Command:** `.cursor/commands/export-report-transcript.md`
