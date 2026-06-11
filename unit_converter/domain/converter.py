@@ -1,7 +1,7 @@
 """Meter-hub conversion to all registered units."""
 
 from unit_converter.domain.length_unit import LengthUnit
-from unit_converter.domain.unit_registry import UnitRegistry
+from unit_converter.unit_registry import UnitRegistry
 
 
 class Converter:

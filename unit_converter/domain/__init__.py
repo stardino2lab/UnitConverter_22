@@ -1,1 +1,1 @@
-"""Domain layer — length units, registry, and conversion."""
+"""Domain layer — length units and conversion."""

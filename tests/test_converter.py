@@ -20,7 +20,7 @@ def test_d_cnv_02_meter_to_feet_five_decimals():
     # When: convert_all from meter
     # Then: feet ≈ 8.20210 (5 decimal places)
     from unit_converter.domain.converter import Converter
-    from unit_converter.domain.unit_registry import default_registry
+    from unit_converter.unit_registry import default_registry
 
     registry = default_registry()
     converter = Converter(registry)
@@ -35,7 +35,7 @@ def test_d_cnv_03_feet_yard_meter_consistency_via_meter_hub():
     # When: convert_all to yard and meter
     # Then: yard and meter results are mutually consistent via meter hub
     from unit_converter.domain.converter import Converter
-    from unit_converter.domain.unit_registry import default_registry
+    from unit_converter.unit_registry import default_registry
 
     registry = default_registry()
     converter = Converter(registry)
