@@ -88,8 +88,6 @@ deactivate
 
 ## 빠른 시작
 
-> **갱신 시점:** 단계 3 GREEN 완료 후 Agent 프롬pt **3-B**로 실제 명령·출력과 맞게 채웁니다.
-
 ```bash
 # 가상환경 (최초 1회)
 python -m venv venv
@@ -97,40 +95,50 @@ venv\Scripts\activate          # Windows
 # source venv/bin/activate     # macOS/Linux
 pip install pytest
 
-# 실행 (GREEN 후 확정 — 아래는 목표)
+# 실행 (stdin 또는 argv)
 python UnitConverter.py
-# python -m unit_converter.app.cli
+python UnitConverter.py meter:2.5
+# python -m unit_converter.app.cli meter:2.5
 
-# 테스트 (GREEN 후)
+# 테스트
 python -m pytest tests/ -v
 ```
 
-**입·출력 예시 (P0 목표):**
+**입·출력 예시 (`meter:2.5`):**
 
 ```
 meter:2.5
 →
+2.5 meter = 2.5 meter
 2.5 meter = 8.2021 feet
-2.5 meter = 2.7340 yard
-…
+2.5 meter = 2.734 yard
+```
+
+**pytest (GREEN — 8건):**
+
+```
+8 passed
 ```
 
 ---
 
 ## 프로젝트 구조
 
-> **1차 갱신:** GREEN (3-B) · **2차 갱신:** REFACTOR (4-B)
-
 ```
 UnitConverter_22/
 ├── UnitConverter.py              # 진입점 → unit_converter.app.cli 위임
 ├── unit_converter/
-│   ├── domain/                   # length_unit, unit_registry, converter
-│   └── app/                      # input_parser, output_formatter, cli
+│   ├── domain/
+│   │   ├── length_unit.py        # 단위 계약·meter/feet/yard 구현
+│   │   ├── unit_registry.py      # 등록·조회 (OCP)
+│   │   └── converter.py          # meter 허브 변환
+│   └── app/
+│       ├── input_parser.py       # unit:value 파싱·검증
+│       ├── output_formatter.py   # README 1줄 형식 출력
+│       └── cli.py                # I/O 오케스트레이션
 ├── tests/
 │   ├── test_converter.py         # Track B — Domain (D-CNV-*)
-│   ├── test_cli.py               # Track A — Boundary (U-IN-*, U-OUT-*)
-│   └── golden/                   # Golden Master (REFACTOR 후)
+│   └── test_cli.py               # Track A — Boundary (U-IN-*, U-OUT-01, PFR-03)
 ├── docs/PRD.md
 ├── Report/ · Prompting/
 └── guide/                        # 로컬 실습 HTML (gitignore)
@@ -138,10 +146,10 @@ UnitConverter_22/
 
 ### Dual-Track (pytest)
 
-| Track | 파일 | 범위 | Mock |
-|-------|------|------|------|
-| **B — Domain** | `tests/test_converter.py` | 변환 비율·정밀도 (D-CNV-01~03) | 없음 |
-| **A — Boundary** | `tests/test_cli.py` | 입력 형식·CLI 출력 (U-IN-*, U-OUT-01) | Domain 허용 |
+| Track | 파일 | Test ID | Mock |
+|-------|------|---------|------|
+| **B — Domain** | `tests/test_converter.py` | D-CNV-01~03 (변환 비율·정밀도·meter 허브) | 없음 |
+| **A — Boundary** | `tests/test_cli.py` | U-IN-01~03, U-OUT-01, PFR-03 (입력 검증·CLI 출력·미등록 단위) | Domain 허용 |
 
 Test ID·Given/Then 상세는 [docs/PRD.md](docs/PRD.md) 및 Report/03.
 
@@ -154,7 +162,7 @@ Test ID·Given/Then 상세는 [docs/PRD.md](docs/PRD.md) 및 Report/03.
 | 항목 | 우선순위 | 상태 |
 |------|----------|------|
 | Golden Master (`tests/golden/`) — U-OUT-01 출력 계약 고정 | P0 | REFACTOR 예정 |
-| OCP/SRP 4모듈 분리 (Parser · Registry · Converter · Formatter) | P0 | GREEN/REFACTOR |
+| OCP/SRP 4모듈 분리 (Parser · Registry · Converter · Formatter) | P0 | GREEN 완료 |
 | 설정 외부화 (`units.json`) | P1 | 미착수 |
 | 동적 단위 등록 (`1 cubit = 0.4572 meter`) | P1 | 미착수 |
 | 출력 포맷 (`--format json\|csv\|table`) | P1 | 미착수 |
