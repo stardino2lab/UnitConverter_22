@@ -2,10 +2,11 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | 0.3 (RED skeleton 반영) |
+| 버전 | 0.4 (REFACTOR · Golden Master 반영) |
 | SSOT | 본 문서 ↔ README.md ↔ Test ID |
 | 우선순위 | P0 = 이번 스프린트 필수 · P1 = Out of Scope (추가 요구) |
-| RED 상태 | `red` 브랜치 · 스켈레톤 8건 · pytest 8 failed · 구현 미착수 |
+| 구현 상태 | `refactoring` 브랜치 · Dual-Track **8 passed** · Golden **matched** (U-OUT-01) |
+| 미작성 P0 TC | U-IN-04, U-IN-05 (REFACTOR 후 추가 예정) |
 
 ---
 
@@ -57,17 +58,26 @@
 - `cubit:1` — **매칭 분기 없음** → 무출력 또는 암묵적 no-op (FR-03 없음)
 - `meter` / `abc` — `:` 없음·비숫자 → **예외 또는 오동작**
 
-### 2.2 현재 워킹트리 참고
+### 2.2 현재 구현 상태 (To-Be · REFACTOR 완료)
 
 ```python
-# UnitConverter.py (현재) — 레거시 로직 제거, cli 위임만 존재
-from unit_converter.app.cli import main  # ← 미구현
+# UnitConverter.py — 하위 호환 진입점
+from unit_converter.cli import main
 ```
 
-- `tests/test_converter.py`, `tests/test_cli.py` — RED 스켈레톤 8건 (`pytest.fail`)
-- `unit_converter/` — 패키지 뼈대만 (`__init__.py`); domain/app **미구현**
+| 영역 | 상태 | 비고 |
+|------|------|------|
+| `unit_converter/cli.py` | ✅ | `python -m unit_converter.cli` 확정 진입점 |
+| `input_parser.py` | ✅ | app에서 분리 — FR-01/04/05 |
+| `unit_registry.py` | ✅ | domain에서 분리 — FR-03, NFR-01 |
+| `domain/converter.py` | ✅ | meter 허브 `convert_all` |
+| `app/output_formatter.py` | ✅ | README 1줄 형식 |
+| `tests/` Dual-Track | ✅ | 8 passed · U-OUT-01 Golden Master |
+| `infrastructure/` | ⏳ P1 | `config_loader.py` 미구현 |
 
-레거시 스멜 분석·P0 구현 대상은 **§2.1 baseline**이다.
+**Golden Master:** `tests/golden/u_out_01_meter_2_5.approved.txt` — U-OUT-01 stdout 계약 (`tests/_approval.py`).
+
+레거시 baseline(§2.1) 대비 To-Be 구현·REFACTOR 결과는 `Report/04`(GREEN), `Report/05`(REFACTOR) 참조.
 
 ---
 
@@ -111,15 +121,15 @@ from unit_converter.app.cli import main  # ← 미구현
 |----|----------|-----------|------|----------|
 | **NFR-01** | **OCP** | `inch` 등 단위 추가 | 기존 **변환기 핵심** 코드 비수정(등록·설정 확장) | P0 |
 | **NFR-02** | **SRP** | 모듈 분리 | **Parser / Registry / Converter / Formatter** (또는 동등) 책임 분리 | P0 |
-| **NFR-03** | **테스트 가능** | README Activities | Dual-Track **RED 스켈레톤** 8건 (`tests/`) | P0 |
+| **NFR-03** | **테스트 가능** | README Activities | Dual-Track 8건 PASS · U-OUT-01 Golden Master | P0 |
 
 ### 4.4 지원 단위 (P0)
 
 - meter, feet, yard
 
-### 4.5 To-Be Architecture (D2 단계 1 · Design)
+### 4.5 To-Be Architecture (D2 단계 1 · Design → REFACTOR 확정)
 
-**상태:** 설계 확정 · **RED 스켈레톤 8건** (`tests/`, `pytest.fail`) · domain/app **미구현** (`Report/02.REPORT.md`)
+**상태:** 설계 확정 · GREEN 8건 PASS · REFACTOR 완료 · Golden Master(U-OUT-01) matched (`Report/05.REPORT.md`)
 
 #### 4.5.1 패키지 구조
 
@@ -127,22 +137,24 @@ from unit_converter.app.cli import main  # ← 미구현
 UnitConverter_22/
 ├── UnitConverter.py              # 하위 호환 엔트리포인트 (cli 위임)
 ├── unit_converter/
+│   ├── cli.py                    # I/O 오케스트레이션 (python -m unit_converter.cli)
+│   ├── input_parser.py           # "unit:value" 파싱·검증 (app에서 분리)
+│   ├── unit_registry.py          # 등록·조회 (domain에서 분리, OCP)
 │   ├── domain/
 │   │   ├── length_unit.py        # 단위 Protocol·구현체 (meter/feet/yard)
-│   │   ├── unit_registry.py      # 등록·조회 (OCP 확장점)
 │   │   └── converter.py          # meter 허브 기반 순수 변환
 │   ├── infrastructure/           # P1 — P0 핵심 범위 밖
-│   │   └── config_loader.py      # JSON/YAML 비율 로드
+│   │   └── config_loader.py      # JSON/YAML 비율 로드 (미구현)
 │   └── app/
-│       ├── input_parser.py       # "unit:value" 파싱·검증
-│       ├── output_formatter.py   # README 1줄 형식 출력 (P1: json/csv/table)
-│       └── cli.py                # I/O 오케스트레이션·exit code
+│       └── output_formatter.py   # README 1줄 형식 출력 (P1: json/csv/table)
 └── tests/
+    ├── _approval.py              # Golden Master harness
+    ├── golden/                   # Approval 기준 (U-OUT-01)
     ├── test_converter.py         # Track B (Domain)
     └── test_cli.py               # Track A (Boundary)
 ```
 
-**의존 방향:** `domain` ← `app` ← (P1) `infrastructure`. Domain은 I/O·CLI에 비의존 (NFR-03).
+**의존 방향:** `domain` ← `unit_registry` ← `cli` ← `input_parser` / `output_formatter` (app). Domain은 I/O·CLI에 비의존 (NFR-03). `input_parser`·`unit_registry`는 패키지 루트에 두어 app/domain 경계와 SRP 4모듈을 명확히 함.
 
 #### 4.5.2 모듈 단일 책임 (SRP)
 
@@ -240,13 +252,13 @@ stdin/argv "meter:2.5"
 | FR-05 | U-IN-04 | A | `meter:2.5:extra` | 형식 오류·크래시 없음 | `input_parser` | ⏳ |
 | FR-05 | U-IN-05 | A | `abc` | 형식 오류 | `input_parser` | ⏳ |
 | FR-03 | PFR-03 | A | `cubit:1` | 명확한 오류·비zero exit | `unit_registry`, `cli` | ✅ |
-| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 3줄+ | `cli` (E2E) | ✅ |
+| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 · **Golden matched** | `cli` (E2E) | ✅ Golden |
 
 **Test ID 별칭:** `PFR-03` = Mom Test·D2 슬라이드 ID; PRD §4.2 **FR-03**과 동일 요구. 코드·커밋에서는 `PFR-03`, 문서 추적용으로 `U-ERR-01` 병기 가능.
 
-**P0 전체:** 10건 (Track B 3 + Track A 7). **RED 스켈레톤 완료:** 8건 — D2 Dual-Track 1차 범위. **미작성:** U-IN-04, U-IN-05 (REFACTOR 전 추가 예정).
+**P0 Dual-Track 1차:** 8건 — **GREEN·REFACTOR 완료** (`pytest` 8 passed). **Golden:** U-OUT-01 → `tests/golden/u_out_01_meter_2_5.approved.txt`. **미작성:** U-IN-04, U-IN-05 (§7.1 10건 완료 전).
 
-**RED 규칙 (D1/D2):** `pytest.fail("RED: [TestID]")` · skip/xfail 금지 · Given/When/Then 주석 · 구현 코드 금지.
+**RED 규칙 (D1/D2):** `pytest.fail("RED: [TestID]")` · skip/xfail 금지 · Given/When/Then 주석 · RED 단계에서만 구현 코드 금지.
 
 ### 7.1.1 RED 커밋 (`red` 브랜치)
 
@@ -257,7 +269,16 @@ stdin/argv "meter:2.5"
 | 3 | U-IN-01~03 | `tests/test_cli.py` |
 | 4 | U-OUT-01, PFR-03 | `tests/test_cli.py` |
 
-**검증:** `pytest tests/` → **8 failed** (ERROR 0, skip 0).
+**RED 검증:** `pytest tests/` → **8 failed** (ERROR 0, skip 0).
+
+### 7.1.2 GREEN · REFACTOR (`green` → `refactoring`)
+
+| Phase | pytest | Golden | 브랜치 | Report |
+|-------|--------|--------|--------|--------|
+| GREEN | 8 passed | — | `green` | [Report/04](../Report/04.REPORT.md) |
+| REFACTOR | 8 passed | U-OUT-01 matched | `refactoring` | [Report/05](../Report/05.REPORT.md) |
+
+**Golden 갱신:** `UPDATE_GOLDEN=1 python -m pytest tests/test_cli.py::test_u_out_01_meter_input_prints_three_or_more_lines -v` — 출력 계약 변경 시에만.
 
 ### 7.2 P1 Test Case (Out of Scope)
 
@@ -269,18 +290,21 @@ stdin/argv "meter:2.5"
 ### 7.3 구현 순서 (ARRR)
 
 1. **RED** — §7.1 Dual-Track 1차 8건 스켈레톤 ✅ · U-IN-04/05 추가 후 §7.1 10건 완료
-2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과
-3. **REFACTOR** — parser/formatter 추출, §7.1 전체 GREEN 유지 (U-IN-04/05 포함)
-4. **P1** — §7.2 + `new_features` 브랜치
+2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과 ✅ (`Report/04`)
+3. **REFACTOR** — Golden Master · SRP 4모듈 분리 · `unit_converter.cli` 진입점 ✅ (`Report/05`)
+4. **P1** — §7.2 + `new_features` 브랜치 (inch · `units.json` · `--format`)
 
 ---
 
 ## 8. 참조
 
-- [README.md](../README.md) — 기본·품질·추가 요구
+- [README.md](../README.md) — 실행·구조·Golden·REFACTOR To-Do
 - [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 요약 (단계 0)
 - [Report/02.REPORT.md](../Report/02.REPORT.md) — OCP/SRP 아키텍처 설계 (단계 1)
 - [Report/03.REPORT.md](../Report/03.REPORT.md) — Dual-Track RED·pytest FAIL (단계 2)
+- [Report/04.REPORT.md](../Report/04.REPORT.md) — GREEN 최소 구현 (단계 3)
+- [Report/05.REPORT.md](../Report/05.REPORT.md) — Golden Master + REFACTOR (단계 4)
 - [guide/D2-진행가이드.html](../guide/D2-진행가이드.html) — D2 실습 가이드 (로컬, gitignored)
-- `tests/test_converter.py` — Track B RED (D-CNV-01~03)
-- `tests/test_cli.py` — Track A RED (U-IN-01~03, U-OUT-01, PFR-03)
+- `tests/_approval.py`, `tests/golden/` — Golden Master harness·approve 파일
+- `tests/test_converter.py` — Track B (D-CNV-01~03)
+- `tests/test_cli.py` — Track A (U-IN-01~03, U-OUT-01 Golden, PFR-03)
