@@ -1,6 +1,6 @@
 """Backward-compatible entry point."""
 
-from unit_converter.app.cli import main
+from unit_converter.cli import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -2,10 +2,10 @@
 
 import sys
 
-from unit_converter.app.input_parser import FormatError, NegativeValueError, parse
 from unit_converter.app.output_formatter import format_output
 from unit_converter.domain.converter import Converter
-from unit_converter.domain.unit_registry import default_registry
+from unit_converter.input_parser import FormatError, NegativeValueError, parse
+from unit_converter.unit_registry import default_registry
 
 
 def run(input_line: str) -> int:
@@ -35,3 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     args = argv if argv is not None else sys.argv[1:]
     input_line = args[0] if args else sys.stdin.readline().rstrip("\n")
     return run(input_line)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

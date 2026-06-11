@@ -1,1 +1,1 @@
-"""Application layer — parsing, formatting, CLI."""
+"""Application layer — output formatting."""

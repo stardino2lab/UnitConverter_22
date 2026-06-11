@@ -2,14 +2,31 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | 0.3 (RED skeleton 반영) |
+| 버전 | 0.5 (Mom Test criteria 보완) |
 | SSOT | 본 문서 ↔ README.md ↔ Test ID |
 | 우선순위 | P0 = 이번 스프린트 필수 · P1 = Out of Scope (추가 요구) |
-| RED 상태 | `red` 브랜치 · 스켈레톤 8건 · pytest 8 failed · 구현 미착수 |
+| 구현 상태 | `refactoring` 브랜치 · Dual-Track **8 passed** · Golden **matched** (U-OUT-01) |
+| 미작성 P0 TC | U-IN-04, U-IN-05 (REFACTOR 후 추가 예정) |
 
 ---
 
 ## 1. Problem
+
+### 1.0 Mom Test 인터뷰 메타 (0-A)
+
+| 항목 | 값 |
+|------|-----|
+| 라운드 | 0-A 1라운드 |
+| 질문 수 | 1 |
+| Good Data | 1건 (지난주 해외 건축 도면, ~40분, inch→feet 누락 실수) |
+| 페르소나 | 해외 도면·내부 보고서 작성 실무자 (엑셀+구글 검산, **CLI 미사용**) |
+| 검증 한계 | **부분 검증** — 추가 인터뷰 2~3회 권장 (워크북 순서 5) |
+
+### 1.0.1 주제 (1문장 · Mom Test 기반)
+
+> **길이 단위 변환에서 반복 수식·검산·실수 비용을, 동일 기준의 검증 가능한 변환 결과로 줄인다.**
+
+*(CLI·3단위 동시 출력은 README 실습 SSOT — §1.3 표면 문제 참조)*
 
 ### 1.1 Mom Test에서 확정한 진짜 문제 (1문장)
 
@@ -17,15 +34,56 @@
 
 **Good Data (0-A):** 지난주 해외 건축 도면 → 엑셀 `× 0.3048` → 약 40분, inch→feet 누락으로 1회 오류, 구글 검색으로 검산.
 
-### 1.2 표면 문제 vs 진짜 문제
+### 1.2 Mom Test 증거 3줄 (인터뷰 인용)
+
+1. **40분** — 반복 수식·검산이 실제 비용.
+2. **inch→feet 누락** — 단위 **조합** 실수가 핵심 pain (단순 3단위 변환기 아님).
+3. **엑셀+구글** — CLI·3단위 동시 출력 요구와 **사용 습관 간격** 존재.
+
+### 1.3 표면 문제 vs 진짜 문제
+
+**표면 문제 (솔루션 혼입 — Mom Test에서 아직 증명되지 않음):**
+
+- “CLI로 meter/feet/yard 3단위 일괄 변환”
+- “JSON/CSV/table 출력”
+- “`meter:2.5` 파싱 CLI”
 
 | 구분 | 내용 | PRD 반영 |
 |------|------|----------|
 | **진짜 문제** | 혼합 단위·반복·검산·실수 비용 | Problem·NFR(검증·확장) 동기 |
-| **표면/솔루션 혼입** | “CLI 3단위 일괄 변환”, “JSON 출력” | **P0 범위는 README 실습 요구**로 두되, Mom Test로 **우선순위 재검토** 필요 표시 |
+| **표면/솔루션 혼입** | 위 bullet 3건 | **P0 범위는 README 실습 요구**로 두되, Mom Test로 **우선순위 재검토** 필요 표시 |
 | **미검증** | 페르소나1이 CLI·yard 동시 변환을 **쓰지 않음** | P0는 교육·C2C 목표; P1에서 inch·혼합 단위 등 **후속** |
 
-### 1.3 R-G-I-O (Mom Test 연결)
+### 1.4 Mom Test 품질 점검 (워크북 순서 5)
+
+| 체크 | 결과 |
+|------|------|
+| 미래 가정("~하면 좋겠다") 없음 | ✅ |
+| 과거 행동·시간·실수 구체성 있음 | ✅ |
+| 진짜 문제에 솔루션명(TDD/CLI/Cursor) 없음 | ✅ |
+| 표면 문제와 진짜 문제가 분리됨 | ✅ |
+| UnitConverter 도메인 반영 (meter/feet/yard·inch 혼재 pain) | ✅ |
+
+**워크북 채점:** **7 / 10** · **판정:** 부분 검증 — 진짜 문제 1문장 확정, 인터뷰 1회·시뮬레이션 기반 한계 명시.
+
+**Mom Test 3원칙 (D1 교재):**
+
+| 원칙 | 0-A 준수 |
+|------|----------|
+| 내 아이디어 말하지 말 것 | ✅ 솔루션 없이 과거 행동만 수집 |
+| 과거·구체·사실만 | ✅ 지난주 도면·40분·1회 오류 |
+| 칭찬·미래 의견 무시 | ✅ “좋을 것 같다” 없음 |
+
+### 1.5 Mom Test 평가 (4기준)
+
+| 기준 | 평가 |
+|------|------|
+| 사실 (과거 행동) | ✅ 구체적 사건 |
+| 구체성 | ✅ 도구·시간·실수 |
+| 솔루션 혼입 | ✅ 없음 (엑셀·검색 = 기존 행동) |
+| Good Data | ✅ 40분, 1회 오류 |
+
+### 1.6 R-G-I-O (Mom Test 연결)
 
 | 항목 | 내용 |
 |------|------|
@@ -35,6 +93,14 @@
 | **Output** | 입력 단위·값 + **지원 단위 전부**에 대한 변환 결과 (stderr/exit code로 명확한 오류) |
 
 **Mom Test → R-G-I-O:** Input/Output 형식은 **실습 SSOT**; Goal은 Mom Test **반복·실수·검산** pain과 연결. feet+inch 혼합은 **본 P0 범위 밖**(후속 후보).
+
+### 1.7 성공 기준 3개 (Mom Test 증거 → 테스트 씨앗)
+
+| # | 성공 기준 | Mom Test 증거 | PRD·Test ID |
+|---|-----------|---------------|-------------|
+| **SC-01** | feet↔meter 변환 정확도가 TC·Golden으로 **재현 가능** | 증거 1 (40분·검산 pain) | FR-02 · D-CNV-01, D-CNV-02, U-OUT-01 |
+| **SC-02** | 잘못된 입력·음수·미지 단위가 **크래시 없이 거부** | 증거 2 (inch→feet 누락류 실수 방지) | FR-03~05 · U-IN-01~05, PFR-03 |
+| **SC-03** | 단위 추가 시 **변환 핵심 비수정** (반복 수식 대체 확장성) | 증거 3 (습관·도구 간격 → 확장 가능 구조) | NFR-01 · D-REG-01 *(P1)* |
 
 ---
 
@@ -57,17 +123,26 @@
 - `cubit:1` — **매칭 분기 없음** → 무출력 또는 암묵적 no-op (FR-03 없음)
 - `meter` / `abc` — `:` 없음·비숫자 → **예외 또는 오동작**
 
-### 2.2 현재 워킹트리 참고
+### 2.2 현재 구현 상태 (To-Be · REFACTOR 완료)
 
 ```python
-# UnitConverter.py (현재) — 레거시 로직 제거, cli 위임만 존재
-from unit_converter.app.cli import main  # ← 미구현
+# UnitConverter.py — 하위 호환 진입점
+from unit_converter.cli import main
 ```
 
-- `tests/test_converter.py`, `tests/test_cli.py` — RED 스켈레톤 8건 (`pytest.fail`)
-- `unit_converter/` — 패키지 뼈대만 (`__init__.py`); domain/app **미구현**
+| 영역 | 상태 | 비고 |
+|------|------|------|
+| `unit_converter/cli.py` | ✅ | `python -m unit_converter.cli` 확정 진입점 |
+| `input_parser.py` | ✅ | app에서 분리 — FR-01/04/05 |
+| `unit_registry.py` | ✅ | domain에서 분리 — FR-03, NFR-01 |
+| `domain/converter.py` | ✅ | meter 허브 `convert_all` |
+| `app/output_formatter.py` | ✅ | README 1줄 형식 |
+| `tests/` Dual-Track | ✅ | 8 passed · U-OUT-01 Golden Master |
+| `infrastructure/` | ⏳ P1 | `config_loader.py` 미구현 |
 
-레거시 스멜 분석·P0 구현 대상은 **§2.1 baseline**이다.
+**Golden Master:** `tests/golden/u_out_01_meter_2_5.approved.txt` — U-OUT-01 stdout 계약 (`tests/_approval.py`).
+
+레거시 baseline(§2.1) 대비 To-Be 구현·REFACTOR 결과는 `Report/04`(GREEN), `Report/05`(REFACTOR) 참조.
 
 ---
 
@@ -111,15 +186,15 @@ from unit_converter.app.cli import main  # ← 미구현
 |----|----------|-----------|------|----------|
 | **NFR-01** | **OCP** | `inch` 등 단위 추가 | 기존 **변환기 핵심** 코드 비수정(등록·설정 확장) | P0 |
 | **NFR-02** | **SRP** | 모듈 분리 | **Parser / Registry / Converter / Formatter** (또는 동등) 책임 분리 | P0 |
-| **NFR-03** | **테스트 가능** | README Activities | Dual-Track **RED 스켈레톤** 8건 (`tests/`) | P0 |
+| **NFR-03** | **테스트 가능** | README Activities | Dual-Track 8건 PASS · U-OUT-01 Golden Master | P0 |
 
 ### 4.4 지원 단위 (P0)
 
 - meter, feet, yard
 
-### 4.5 To-Be Architecture (D2 단계 1 · Design)
+### 4.5 To-Be Architecture (D2 단계 1 · Design → REFACTOR 확정)
 
-**상태:** 설계 확정 · **RED 스켈레톤 8건** (`tests/`, `pytest.fail`) · domain/app **미구현** (`Report/02.REPORT.md`)
+**상태:** 설계 확정 · GREEN 8건 PASS · REFACTOR 완료 · Golden Master(U-OUT-01) matched (`Report/05.REPORT.md`)
 
 #### 4.5.1 패키지 구조
 
@@ -127,22 +202,24 @@ from unit_converter.app.cli import main  # ← 미구현
 UnitConverter_22/
 ├── UnitConverter.py              # 하위 호환 엔트리포인트 (cli 위임)
 ├── unit_converter/
+│   ├── cli.py                    # I/O 오케스트레이션 (python -m unit_converter.cli)
+│   ├── input_parser.py           # "unit:value" 파싱·검증 (app에서 분리)
+│   ├── unit_registry.py          # 등록·조회 (domain에서 분리, OCP)
 │   ├── domain/
 │   │   ├── length_unit.py        # 단위 Protocol·구현체 (meter/feet/yard)
-│   │   ├── unit_registry.py      # 등록·조회 (OCP 확장점)
 │   │   └── converter.py          # meter 허브 기반 순수 변환
 │   ├── infrastructure/           # P1 — P0 핵심 범위 밖
-│   │   └── config_loader.py      # JSON/YAML 비율 로드
+│   │   └── config_loader.py      # JSON/YAML 비율 로드 (미구현)
 │   └── app/
-│       ├── input_parser.py       # "unit:value" 파싱·검증
-│       ├── output_formatter.py   # README 1줄 형식 출력 (P1: json/csv/table)
-│       └── cli.py                # I/O 오케스트레이션·exit code
+│       └── output_formatter.py   # README 1줄 형식 출력 (P1: json/csv/table)
 └── tests/
+    ├── _approval.py              # Golden Master harness
+    ├── golden/                   # Approval 기준 (U-OUT-01)
     ├── test_converter.py         # Track B (Domain)
     └── test_cli.py               # Track A (Boundary)
 ```
 
-**의존 방향:** `domain` ← `app` ← (P1) `infrastructure`. Domain은 I/O·CLI에 비의존 (NFR-03).
+**의존 방향:** `domain` ← `unit_registry` ← `cli` ← `input_parser` / `output_formatter` (app). Domain은 I/O·CLI에 비의존 (NFR-03). `input_parser`·`unit_registry`는 패키지 루트에 두어 app/domain 경계와 SRP 4모듈을 명확히 함.
 
 #### 4.5.2 모듈 단일 책임 (SRP)
 
@@ -216,12 +293,30 @@ stdin/argv "meter:2.5"
 
 ## 6. Mom Test → PRD 추적 (요약)
 
-| Mom Test 신호 | PRD 반영 |
-|---------------|----------|
-| 반복 수식·40분 | Goal: 일관 변환·검증 가능 출력 |
-| inch→feet 누락 | FR-04/05 강화; **inch·혼합 단위**는 P1+ 후속 |
-| 엑셀·구글 검산 | P0 CLI는 실습 SSOT; UX는 **후속** 검토 |
-| yard 거의 미사용 | FR-02 유지(실습); 우선순위·TC는 feet/meter |
+### 6.1 증거 → 신호 → PRD
+
+| Mom Test 증거 (§1.2) | Mom Test 신호 | PRD 반영 |
+|----------------------|---------------|----------|
+| 40분·반복·검산 | 반복 수식·검산 비용 | §1.7 SC-01 · Goal · FR-02 · D-CNV-01/02, U-OUT-01 |
+| inch→feet 누락 | 단위 조합 실수 | §1.7 SC-02 · FR-04/05 · U-IN-01~05 |
+| 엑셀+구글 vs CLI 간격 | 사용 습관·도구 불일치 | §1.3 표면 문제 · P0=실습 SSOT · UX 후속 |
+| yard 거의 미사용 | 3단위 동시 출력 미검증 | FR-02 유지(실습); TC 우선순위 feet/meter |
+
+### 6.2 성공 기준 → FR/NFR/TC
+
+| 성공 기준 | Mom Test 근거 | PRD ID | Test ID |
+|-----------|---------------|--------|---------|
+| **SC-01** 변환 정확도 재현 | 증거 1 | FR-02 | D-CNV-01, D-CNV-02, D-CNV-03, U-OUT-01 |
+| **SC-02** 오류 입력 거부 | 증거 2 | FR-03, FR-04, FR-05 | U-IN-01~05, PFR-03 |
+| **SC-03** OCP 확장 | 증거 3 | NFR-01 | D-REG-01 *(P1)* |
+
+### 6.3 품질 점검 → 검증 범위
+
+| 품질 점검 (§1.4) | PRD·구현 함의 |
+|------------------|---------------|
+| 7/10 · 부분 검증 | P0는 README·C2C; inch·혼합 단위는 P1+ |
+| 도메인 반영 ✅ | feet↔meter pain → TC·Golden 우선 (§4.2 Mom Test 메모) |
+| 인터뷰 1회 한계 | 0-A 2라운드 권장 — Report/01 §7 |
 
 ---
 
@@ -240,13 +335,13 @@ stdin/argv "meter:2.5"
 | FR-05 | U-IN-04 | A | `meter:2.5:extra` | 형식 오류·크래시 없음 | `input_parser` | ⏳ |
 | FR-05 | U-IN-05 | A | `abc` | 형식 오류 | `input_parser` | ⏳ |
 | FR-03 | PFR-03 | A | `cubit:1` | 명확한 오류·비zero exit | `unit_registry`, `cli` | ✅ |
-| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 3줄+ | `cli` (E2E) | ✅ |
+| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 · **Golden matched** | `cli` (E2E) | ✅ Golden |
 
 **Test ID 별칭:** `PFR-03` = Mom Test·D2 슬라이드 ID; PRD §4.2 **FR-03**과 동일 요구. 코드·커밋에서는 `PFR-03`, 문서 추적용으로 `U-ERR-01` 병기 가능.
 
-**P0 전체:** 10건 (Track B 3 + Track A 7). **RED 스켈레톤 완료:** 8건 — D2 Dual-Track 1차 범위. **미작성:** U-IN-04, U-IN-05 (REFACTOR 전 추가 예정).
+**P0 Dual-Track 1차:** 8건 — **GREEN·REFACTOR 완료** (`pytest` 8 passed). **Golden:** U-OUT-01 → `tests/golden/u_out_01_meter_2_5.approved.txt`. **미작성:** U-IN-04, U-IN-05 (§7.1 10건 완료 전).
 
-**RED 규칙 (D1/D2):** `pytest.fail("RED: [TestID]")` · skip/xfail 금지 · Given/When/Then 주석 · 구현 코드 금지.
+**RED 규칙 (D1/D2):** `pytest.fail("RED: [TestID]")` · skip/xfail 금지 · Given/When/Then 주석 · RED 단계에서만 구현 코드 금지.
 
 ### 7.1.1 RED 커밋 (`red` 브랜치)
 
@@ -257,7 +352,16 @@ stdin/argv "meter:2.5"
 | 3 | U-IN-01~03 | `tests/test_cli.py` |
 | 4 | U-OUT-01, PFR-03 | `tests/test_cli.py` |
 
-**검증:** `pytest tests/` → **8 failed** (ERROR 0, skip 0).
+**RED 검증:** `pytest tests/` → **8 failed** (ERROR 0, skip 0).
+
+### 7.1.2 GREEN · REFACTOR (`green` → `refactoring`)
+
+| Phase | pytest | Golden | 브랜치 | Report |
+|-------|--------|--------|--------|--------|
+| GREEN | 8 passed | — | `green` | [Report/04](../Report/04.REPORT.md) |
+| REFACTOR | 8 passed | U-OUT-01 matched | `refactoring` | [Report/05](../Report/05.REPORT.md) |
+
+**Golden 갱신:** `UPDATE_GOLDEN=1 python -m pytest tests/test_cli.py::test_u_out_01_meter_input_prints_three_or_more_lines -v` — 출력 계약 변경 시에만.
 
 ### 7.2 P1 Test Case (Out of Scope)
 
@@ -269,18 +373,20 @@ stdin/argv "meter:2.5"
 ### 7.3 구현 순서 (ARRR)
 
 1. **RED** — §7.1 Dual-Track 1차 8건 스켈레톤 ✅ · U-IN-04/05 추가 후 §7.1 10건 완료
-2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과
-3. **REFACTOR** — parser/formatter 추출, §7.1 전체 GREEN 유지 (U-IN-04/05 포함)
-4. **P1** — §7.2 + `new_features` 브랜치
+2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과 ✅ (`Report/04`)
+3. **REFACTOR** — Golden Master · SRP 4모듈 분리 · `unit_converter.cli` 진입점 ✅ (`Report/05`)
+4. **P1** — §7.2 + `new_features` 브랜치 (inch · `units.json` · `--format`)
 
 ---
 
 ## 8. 참조
 
-- [README.md](../README.md) — 기본·품질·추가 요구
-- [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 요약 (단계 0)
+- [README.md](../README.md) — 실행·구조·Golden·REFACTOR To-Do
+- [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 세션 기록 (단계 0; criteria SSOT는 본 문서 §1)
 - [Report/02.REPORT.md](../Report/02.REPORT.md) — OCP/SRP 아키텍처 설계 (단계 1)
 - [Report/03.REPORT.md](../Report/03.REPORT.md) — Dual-Track RED·pytest FAIL (단계 2)
-- [guide/D2-진행가이드.html](../guide/D2-진행가이드.html) — D2 실습 가이드 (로컬, gitignored)
-- `tests/test_converter.py` — Track B RED (D-CNV-01~03)
-- `tests/test_cli.py` — Track A RED (U-IN-01~03, U-OUT-01, PFR-03)
+- [Report/04.REPORT.md](../Report/04.REPORT.md) — GREEN 최소 구현 (단계 3)
+- [Report/05.REPORT.md](../Report/05.REPORT.md) — Golden Master + REFACTOR (단계 4)
+- `tests/_approval.py`, `tests/golden/` — Golden Master harness·approve 파일
+- `tests/test_converter.py` — Track B (D-CNV-01~03)
+- `tests/test_cli.py` — Track A (U-IN-01~03, U-OUT-01 Golden, PFR-03)

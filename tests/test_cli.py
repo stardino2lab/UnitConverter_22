@@ -8,7 +8,7 @@ def test_u_in_01_empty_input_format_error(capsys):
     # Given: ""
     # When: CLI processes input
     # Then: format error message and non-zero exit code
-    from unit_converter.app.cli import run
+    from unit_converter.cli import run
 
     exit_code = run("")
     captured = capsys.readouterr()
@@ -21,7 +21,7 @@ def test_u_in_02_missing_colon_format_error(capsys):
     # Given: "meter"
     # When: CLI processes input
     # Then: format error message
-    from unit_converter.app.cli import run
+    from unit_converter.cli import run
 
     exit_code = run("meter")
     captured = capsys.readouterr()
@@ -34,7 +34,7 @@ def test_u_in_03_negative_value_rejected(capsys):
     # Given: "meter:-1"
     # When: CLI processes input
     # Then: rejection with error message
-    from unit_converter.app.cli import run
+    from unit_converter.cli import run
 
     exit_code = run("meter:-1")
     captured = capsys.readouterr()
@@ -43,22 +43,17 @@ def test_u_in_03_negative_value_rejected(capsys):
 
 
 def test_u_out_01_meter_input_prints_three_or_more_lines(capsys):
-    """U-OUT-01: 'meter:2.5' → README-style output (3+ lines)."""
+    """U-OUT-01: 'meter:2.5' → README-style output (golden master)."""
     # Given: "meter:2.5"
     # When: CLI runs successfully
-    # Then: stdout has 3+ lines (meter, feet, yard in README format)
-    from unit_converter.app.cli import run
+    # Then: stdout matches tests/golden/u_out_01_meter_2_5.approved.txt
+    from tests._approval import assert_matches_golden
+    from unit_converter.cli import run
 
     exit_code = run("meter:2.5")
     captured = capsys.readouterr()
     assert exit_code == 0
-    lines = [line for line in captured.out.strip().splitlines() if line.strip()]
-    assert len(lines) >= 3
-    output = captured.out.lower()
-    assert "meter" in output
-    assert "feet" in output
-    assert "yard" in output
-    assert "2.5 meter =" in captured.out
+    assert_matches_golden(captured.out, "u_out_01_meter_2_5.approved.txt")
 
 
 def test_pfr_03_unregistered_unit_cubit_error(capsys):
@@ -66,7 +61,7 @@ def test_pfr_03_unregistered_unit_cubit_error(capsys):
     # Given: "cubit:1"
     # When: CLI processes input
     # Then: clear error message and non-zero exit code
-    from unit_converter.app.cli import run
+    from unit_converter.cli import run
 
     exit_code = run("cubit:1")
     captured = capsys.readouterr()
