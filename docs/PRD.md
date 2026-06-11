@@ -2,9 +2,10 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | 0.2 (Design 반영) |
+| 버전 | 0.3 (RED skeleton 반영) |
 | SSOT | 본 문서 ↔ README.md ↔ Test ID |
 | 우선순위 | P0 = 이번 스프린트 필수 · P1 = Out of Scope (추가 요구) |
+| RED 상태 | `red` 브랜치 · 스켈레톤 8건 · pytest 8 failed · 구현 미착수 |
 
 ---
 
@@ -63,6 +64,9 @@
 from unit_converter.app.cli import main  # ← 미구현
 ```
 
+- `tests/test_converter.py`, `tests/test_cli.py` — RED 스켈레톤 8건 (`pytest.fail`)
+- `unit_converter/` — 패키지 뼈대만 (`__init__.py`); domain/app **미구현**
+
 레거시 스멜 분석·P0 구현 대상은 **§2.1 baseline**이다.
 
 ---
@@ -107,7 +111,7 @@ from unit_converter.app.cli import main  # ← 미구현
 |----|----------|-----------|------|----------|
 | **NFR-01** | **OCP** | `inch` 등 단위 추가 | 기존 **변환기 핵심** 코드 비수정(등록·설정 확장) | P0 |
 | **NFR-02** | **SRP** | 모듈 분리 | **Parser / Registry / Converter / Formatter** (또는 동등) 책임 분리 | P0 |
-| **NFR-03** | **테스트 가능** | README Activities | 단위 변환·입력 검증 **TC** 존재 | P0 |
+| **NFR-03** | **테스트 가능** | README Activities | Dual-Track **RED 스켈레톤** 8건 (`tests/`) | P0 |
 
 ### 4.4 지원 단위 (P0)
 
@@ -115,7 +119,7 @@ from unit_converter.app.cli import main  # ← 미구현
 
 ### 4.5 To-Be Architecture (D2 단계 1 · Design)
 
-**상태:** 설계 확정 · 코드 미구현 (`Report/02.REPORT.md`)
+**상태:** 설계 확정 · **RED 스켈레톤 8건** (`tests/`, `pytest.fail`) · domain/app **미구현** (`Report/02.REPORT.md`)
 
 #### 4.5.1 패키지 구조
 
@@ -177,8 +181,8 @@ stdin/argv "meter:2.5"
 | ID | 주 책임 모듈 | 보조 모듈 | Test ID |
 |----|-------------|-----------|---------|
 | FR-01 | `input_parser.py` | `cli.py` | U-OUT-01 |
-| FR-02 | `converter.py` | `output_formatter.py`, `unit_registry.py`, `cli.py` | D-CNV-02, D-CNV-03, U-OUT-01 |
-| FR-03 | `unit_registry.py` | `cli.py` | U-ERR-01 |
+| FR-02 | `converter.py` | `output_formatter.py`, `unit_registry.py`, `cli.py` | D-CNV-01, D-CNV-02, D-CNV-03, U-OUT-01 |
+| FR-03 | `unit_registry.py` | `cli.py` | PFR-03 *(별칭 U-ERR-01)* |
 | FR-04 | `input_parser.py` | `cli.py` | U-IN-03 |
 | FR-05 | `input_parser.py` | `cli.py` | U-IN-01, U-IN-02, U-IN-04, U-IN-05 |
 | NFR-01 | `length_unit.py`, `unit_registry.py` | — | D-REG-01 *(P1)* |
@@ -223,22 +227,37 @@ stdin/argv "meter:2.5"
 
 ## 7. C2C 추적 (PRD → Test ID → 모듈)
 
-### 7.1 P0 Test Case (RED 대상)
+### 7.1 P0 Test Case
 
-| PRD ID | Test ID | Track | Given | Then | 주 모듈 |
-|--------|---------|-------|-------|------|---------|
-| FR-02 | D-CNV-01 | B | 1 feet | ≈ 0.3048 m | `length_unit`, `converter` |
-| FR-02 | D-CNV-02 | B | 2.5 meter | feet ≈ 8.20210 | `converter` |
-| FR-02 | D-CNV-03 | B | feet 입력 | yard·meter 상호 일관 | `converter` |
-| FR-05 | U-IN-01 | A | `""` | 형식 오류·비zero exit | `input_parser`, `cli` |
-| FR-05 | U-IN-02 | A | `meter` | 형식 오류 | `input_parser` |
-| FR-04 | U-IN-03 | A | `meter:-1` | 거부·오류 메시지 | `input_parser` |
-| FR-05 | U-IN-04 | A | `meter:2.5:extra` | 형식 오류·크래시 없음 | `input_parser` |
-| FR-05 | U-IN-05 | A | `abc` | 형식 오류 | `input_parser` |
-| FR-03 | U-ERR-01 | A | `cubit:1` | 명확한 오류·비zero exit | `unit_registry`, `cli` |
-| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 3줄+ | `cli` (E2E) |
+| PRD ID | Test ID | Track | Given | Then | 주 모듈 | RED |
+|--------|---------|-------|-------|------|---------|-----|
+| FR-02 | D-CNV-01 | B | 1 feet | ≈ 0.3048 m | `length_unit`, `converter` | ✅ |
+| FR-02 | D-CNV-02 | B | 2.5 meter | feet ≈ 8.20210 | `converter` | ✅ |
+| FR-02 | D-CNV-03 | B | feet 입력 | yard·meter 상호 일관 | `converter` | ✅ |
+| FR-05 | U-IN-01 | A | `""` | 형식 오류·비zero exit | `input_parser`, `cli` | ✅ |
+| FR-05 | U-IN-02 | A | `meter` | 형식 오류 | `input_parser` | ✅ |
+| FR-04 | U-IN-03 | A | `meter:-1` | 거부·오류 메시지 | `input_parser` | ✅ |
+| FR-05 | U-IN-04 | A | `meter:2.5:extra` | 형식 오류·크래시 없음 | `input_parser` | ⏳ |
+| FR-05 | U-IN-05 | A | `abc` | 형식 오류 | `input_parser` | ⏳ |
+| FR-03 | PFR-03 | A | `cubit:1` | 명확한 오류·비zero exit | `unit_registry`, `cli` | ✅ |
+| FR-01, FR-02 | U-OUT-01 | A | `meter:2.5` | README 형식 전 단위 3줄+ | `cli` (E2E) | ✅ |
 
-**P0 RED 필수:** 10건 (Track B 3 + Track A 7).
+**Test ID 별칭:** `PFR-03` = Mom Test·D2 슬라이드 ID; PRD §4.2 **FR-03**과 동일 요구. 코드·커밋에서는 `PFR-03`, 문서 추적용으로 `U-ERR-01` 병기 가능.
+
+**P0 전체:** 10건 (Track B 3 + Track A 7). **RED 스켈레톤 완료:** 8건 — D2 Dual-Track 1차 범위. **미작성:** U-IN-04, U-IN-05 (REFACTOR 전 추가 예정).
+
+**RED 규칙 (D1/D2):** `pytest.fail("RED: [TestID]")` · skip/xfail 금지 · Given/When/Then 주석 · 구현 코드 금지.
+
+### 7.1.1 RED 커밋 (`red` 브랜치)
+
+| 커밋 | Test ID | 파일 |
+|------|---------|------|
+| 1 | D-CNV-01, D-CNV-02 | `tests/test_converter.py` |
+| 2 | D-CNV-03 | `tests/test_converter.py` |
+| 3 | U-IN-01~03 | `tests/test_cli.py` |
+| 4 | U-OUT-01, PFR-03 | `tests/test_cli.py` |
+
+**검증:** `pytest tests/` → **8 failed** (ERROR 0, skip 0).
 
 ### 7.2 P1 Test Case (Out of Scope)
 
@@ -249,9 +268,9 @@ stdin/argv "meter:2.5"
 
 ### 7.3 구현 순서 (ARRR)
 
-1. **RED** — §7.1 TC만 작성 (`pytest.fail`), 구현 금지
+1. **RED** — §7.1 Dual-Track 1차 8건 스켈레톤 ✅ · U-IN-04/05 추가 후 §7.1 10건 완료
 2. **GREEN** — D-CNV-01~03 + U-OUT-01 최소 통과
-3. **REFACTOR** — parser/formatter 추출, §7.1 전체 GREEN 유지
+3. **REFACTOR** — parser/formatter 추출, §7.1 전체 GREEN 유지 (U-IN-04/05 포함)
 4. **P1** — §7.2 + `new_features` 브랜치
 
 ---
@@ -261,4 +280,7 @@ stdin/argv "meter:2.5"
 - [README.md](../README.md) — 기본·품질·추가 요구
 - [Report/01.REPORT.md](../Report/01.REPORT.md) — Mom Test 요약 (단계 0)
 - [Report/02.REPORT.md](../Report/02.REPORT.md) — OCP/SRP 아키텍처 설계 (단계 1)
+- [Report/03.REPORT.md](../Report/03.REPORT.md) — Dual-Track RED·pytest FAIL (단계 2)
 - [guide/D2-진행가이드.html](../guide/D2-진행가이드.html) — D2 실습 가이드 (로컬, gitignored)
+- `tests/test_converter.py` — Track B RED (D-CNV-01~03)
+- `tests/test_cli.py` — Track A RED (U-IN-01~03, U-OUT-01, PFR-03)
